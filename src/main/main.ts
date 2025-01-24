@@ -14,6 +14,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import { exec } from 'child_process';
 
 class AppUpdater {
   constructor() {
@@ -127,6 +128,16 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
+
+    exec('docker-compose up --build', (err, stdout, stderr) => {
+      if (err) {
+        console.log(`exec error: ${err}`);
+        return;
+      }
+      console.log(`stdout: ${stdout}`);
+      console.log(`stderr: ${stderr}`);
+    })
+
     createWindow();
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
