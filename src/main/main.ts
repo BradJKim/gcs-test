@@ -97,6 +97,7 @@ const createWindow = async () => {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    
   });
 
   const menuBuilder = new MenuBuilder(mainWindow);
@@ -128,15 +129,6 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
-
-    exec('docker-compose up --build', (err, stdout, stderr) => {
-      if (err) {
-        console.log(`exec error: ${err}`);
-        return;
-      }
-      console.log(`stdout: ${stdout}`);
-      console.log(`stderr: ${stderr}`);
-    })
 
     createWindow();
     app.on('activate', () => {

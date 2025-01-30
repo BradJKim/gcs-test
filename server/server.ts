@@ -1,19 +1,14 @@
-import express, { Request, Response } from 'express'
-import routes from './routes/routes';
+import WebSocket from 'ws';
 
-const app = express()
 const port = 8080
+const wss = new WebSocket.Server({ port: port});
 
-//app.use(express.json())
-//app.use(express.urlencoded({extended: true}))
+wss.on('connection', function connection(ws) { // Advanced WS Server - https://ably.com/blog/websockets-react-tutorial
+    ws.on('message', function incoming(message) {
+        console.log('received: %s', message);
+    });
 
-/* app.get('/', (req: Request, res: Response) => {
-    //req.params()
-    res.send('Hello World!')
-}) */
+    ws.send('Message Received');
+});
 
-routes(app);
-
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
-})
+console.log('Websocket Server Running');
