@@ -1,5 +1,5 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useReducer } from 'react';
 import icon from '../../assets/icon.svg';
 import './App.css';
 import { WebsocketContext, WebsocketProvider } from './WebsocketProvider';
@@ -7,12 +7,25 @@ import { WebsocketContext, WebsocketProvider } from './WebsocketProvider';
 function Hello() {
   const ws = useContext(WebsocketContext);
 
+  const [, forceUpdate] = useReducer((x) => x + 1, 0);
+
   useEffect(() => {
-    console.log(ws)
+    const interval = setInterval(() => {
+      forceUpdate();
+    }, 2000)
+
+    //console.log(ws)
+
     if (ws.ready) {
-      ws.send('Hello, server!');
+      ws.send(JSON.stringify({type: 'ping', message: 'Hello, server!'}));
     }
-  }, []);
+
+    return () => clearInterval(interval);
+  }, [ws.ready]);
+
+  const buttonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
+    ws.send(JSON.stringify({type: 'request', message: 'add'}));
+  }
 
   return (
     <div>
@@ -22,6 +35,11 @@ function Hello() {
       <h1>electron-react-boilerplate</h1>
       <div className="Hello">
         {ws.value? <p>{ws.value}</p> : <p>Loading...</p>}
+      </div>
+      <div className="buttons">
+        <button onClick={buttonHandler} className="addCubesat">
+          Add Cubesat
+        </button>
       </div>
     </div>
   );

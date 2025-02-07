@@ -43,7 +43,7 @@ export const WebsocketProvider = ({children} : Props ) => {
         send: send
     };
 
-    console.log(ret)
+    //console.log(ret)
     
     return (
         <WebsocketContext.Provider value={ret}>
