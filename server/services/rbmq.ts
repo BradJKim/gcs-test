@@ -8,7 +8,9 @@ const username = process.env.RABBITMQ_USER;
 const password = process.env.RABBITMQ_PASS;
 const port = process.env.RABBITMQ_PORT;
 
-const URL = `amqp://${username}:${password}@localhost:${port}`;
+
+const URL = `amqp://${username}:${password}@rabbitmq:${port}`;
+console.log(URL)
 
 let rbmqChannel: Channel;
 

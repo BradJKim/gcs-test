@@ -1,7 +1,11 @@
 import WebSocket from "ws";
 import { createCubesat } from "../services/db";
 
-export default function wsController(ws: WebSocket, message: string): void {
+interface Params {
+    id: number
+}
+
+export default function wsController(ws: WebSocket, message: string, params: Params): void {
 
     /* FUNCTIONS */
 
@@ -9,7 +13,7 @@ export default function wsController(ws: WebSocket, message: string): void {
      * db request add it
      */
     const addCubesat = async () => {
-        let response = await createCubesat();
+        let response = await createCubesat(params['id']);
         response = await response;
         const result = JSON.parse(response);
 

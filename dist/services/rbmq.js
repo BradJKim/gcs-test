@@ -11,7 +11,8 @@ const callback_api_1 = __importDefault(require("amqplib/callback_api"));
 const username = process.env.RABBITMQ_USER;
 const password = process.env.RABBITMQ_PASS;
 const port = process.env.RABBITMQ_PORT;
-const URL = `amqp://${username}:${password}@localhost:${port}`;
+const URL = `amqp://${username}:${password}@rabbitmq:${port}`;
+console.log(URL);
 let rbmqChannel;
 callback_api_1.default.connect(URL, (err, connection) => {
     if (err) {

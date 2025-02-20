@@ -9,7 +9,6 @@ const dbConfig_1 = __importDefault(require("./config/dbConfig"));
 const rbmq_1 = require("./services/rbmq");
 const port = 8080;
 const wss = new ws_1.default.Server({ port: port });
-const channel = rbmq_1.rbmqChannel;
 dbConfig_1.default.sync({ force: false }).then(() => {
     console.log('Database Synced!');
 }).catch((error) => {
@@ -22,7 +21,7 @@ dbConfig_1.default.sync({ force: false }).then(() => {
                 switch (parsedMessage.type) {
                     case "request":
                         console.log('received: %s', message);
-                        (0, controller_1.default)(ws, parsedMessage.message);
+                        (0, controller_1.default)(ws, parsedMessage.message, parsedMessage.params);
                         break;
                     case "ping":
                         console.log('received: %s', message);
@@ -43,8 +42,8 @@ dbConfig_1.default.sync({ force: false }).then(() => {
     console.log('Websocket Server Running');
 });
 function listenToRabbitMQ() {
-    if (channel) {
-        channel.consume('websocket_queue', (msg) => {
+    if (rbmq_1.rbmqChannel) {
+        rbmq_1.rbmqChannel.consume('websocket_queue', (msg) => {
             if (msg) {
                 const message = msg.content.toString();
                 console.log('Received message from RabbitMQ:', message);
@@ -55,7 +54,7 @@ function listenToRabbitMQ() {
                     }
                 }); */
                 // Acknowledge the message
-                channel.ack(msg);
+                rbmq_1.rbmqChannel.ack(msg);
             }
             else {
                 console.log("Message is Null");

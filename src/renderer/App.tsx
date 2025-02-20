@@ -9,6 +9,8 @@ function Hello() {
 
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
+  const [count, setCount] = useState(0);
+
   useEffect(() => {
     const interval = setInterval(() => {
       forceUpdate();
@@ -24,7 +26,9 @@ function Hello() {
   }, [ws.ready]);
 
   const buttonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
-    ws.send(JSON.stringify({type: 'request', message: 'add'}));
+    ws.send(JSON.stringify({type: 'request', message: 'add', params: {id: count}}));
+
+    setCount(count + 1);
   }
 
   return (

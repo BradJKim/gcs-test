@@ -20,19 +20,15 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
-    restart: unless-stopped
-  app:
+  backend:
     build:
       context: .
-      dockerfile: dockerfile
+      dockerfile: dockerfile-backend
     volumes:
-      - .:/home/node/app
-    working_dir: /home/node/app
+      - .:/home/node/backend
     ports:
       - "8080:8080"
-    command: npm run backend
     restart: always
-    user: node
     environment:
       DB_NAME: gcs-db
       DB_USER: user
@@ -41,7 +37,7 @@ services:
       DB_PORT: 3306
       RABBITMQ_USER: guest
       RABBITMQ_PASS: guest
-      RABBITMQ_PORT: 5672
+      RABBITMQ_PORT: 15672
       NODE_ENV: production
     depends_on:
       - db

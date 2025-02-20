@@ -1,6 +1,6 @@
 FROM node:23
 
-RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+RUN mkdir -p /home/node/app/.erb && mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
 
 WORKDIR /home/node/app
 
@@ -8,10 +8,10 @@ COPY package.json .
 
 USER node
 
-RUN npm install --ignore-scripts
+COPY ./.erb ./erb
 
-COPY --chown=node:node ./server .
+COPY --chown=node:node ./src .
 
-EXPOSE 8080
+RUN npm install
 
-CMD ["npm", "run", "backend"]
+CMD ["npm", "start"]

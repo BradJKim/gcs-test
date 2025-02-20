@@ -7,8 +7,6 @@ import { rbmqChannel } from './services/rbmq';
 const port = 8080
 const wss = new WebSocket.Server({ port: port});
 
-const channel = rbmqChannel;
-
 db.sync({ force: false }).then(() => {
     console.log('Database Synced!');
 }).catch((error) => {
@@ -22,7 +20,7 @@ db.sync({ force: false }).then(() => {
                 switch(parsedMessage.type) {
                     case "request":
                         console.log('received: %s', message);
-                        wsController(ws, parsedMessage.message);
+                        wsController(ws, parsedMessage.message, parsedMessage.params);
                         break;
         
                     case "ping":
@@ -47,8 +45,8 @@ db.sync({ force: false }).then(() => {
 });
 
 function listenToRabbitMQ() {
-    if (channel) {
-        channel.consume('websocket_queue', (msg: Message | null) => {
+    if (rbmqChannel) {
+        rbmqChannel.consume('websocket_queue', (msg: Message | null) => {
             if(msg) {
                 const message = msg.content.toString();
                 console.log('Received message from RabbitMQ:', message);
@@ -61,7 +59,7 @@ function listenToRabbitMQ() {
                 }); */
         
                 // Acknowledge the message
-                channel.ack(msg);
+                rbmqChannel.ack(msg);
             } else {
                 console.log("Message is Null");
             }

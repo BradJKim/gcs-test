@@ -11,13 +11,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = wsController;
 const db_1 = require("../services/db");
-function wsController(ws, message) {
+function wsController(ws, message, params) {
     /* FUNCTIONS */
     /**
      * db request add it
      */
     const addCubesat = () => __awaiter(this, void 0, void 0, function* () {
-        let response = yield (0, db_1.createCubesat)();
+        let response = yield (0, db_1.createCubesat)(params['id']);
         response = yield response;
         const result = JSON.parse(response);
         if (result.status === 'success') {
