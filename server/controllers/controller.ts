@@ -1,19 +1,32 @@
 import WebSocket from "ws";
 import { createCubesat } from "../services/db";
+import { Channel } from "amqplib";
 
-interface Params {
-    id: number
-}
+export default function wsController(channel: Channel, queue: string, ws: WebSocket, message: string, params: string): void {
 
-export default function wsController(ws: WebSocket, message: string, params: Params): void {
-
-    /* FUNCTIONS */
+    /* CONTROLLER FUNCTIONS */
 
     /**
-     * db request add it
+     * Sends message to RabbitMQ
+     */
+    const sendMessage = () => {
+        try {
+            const MessageJSON: Message = JSON.parse(params);
+
+            channel.sendToQueue(queue, Buffer.from(MessageJSON['message']));
+            ws.send(JSON.stringify({ type: "success", message: "Message sent" }));
+        } catch (err) {
+            ws.send(JSON.stringify({ type: "failure", message: "Unable to send message" }));
+        }
+    }
+
+    /**
+     * DB request add cubesat
      */
     const addCubesat = async () => {
-        let response = await createCubesat(params['id']);
+        const cubesatJson: Cubesat = JSON.parse(params);
+
+        let response = await createCubesat(cubesatJson['id']);
         response = await response;
         const result = JSON.parse(response);
 
@@ -24,16 +37,20 @@ export default function wsController(ws: WebSocket, message: string, params: Par
         }
     }
 
+
     /* ROUTING */
 
-    if(message === 'add') {
+    if(message === 'send') {
+        sendMessage();
+    }
+    else if(message === 'add') {
         addCubesat()
     }
     else if (message === 'remove') {
         //removeCubesat()
         ws.send(JSON.stringify({ type: "success", message: "Removed Cubesat" }));
     }
-    else {
+    else { // message unknown
         ws.send(JSON.stringify({ type: "error", message: "Unknown request" }));
     }
     

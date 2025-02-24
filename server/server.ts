@@ -1,28 +1,58 @@
 import WebSocket from 'ws';
-import { Message } from 'amqplib/callback_api'
 import wsController from './controllers/controller';
 import db from './config/dbConfig';
-import { rbmqChannel } from './services/rbmq';
+import amqp, { Channel } from 'amqplib'
 
 const port = 8080
+
+const username = process.env.RABBITMQ_USER;
+const password = process.env.RABBITMQ_PASS;
+const rbmqPort = process.env.RABBITMQ_PORT;
+const RABBIT_URL = `amqp://${username}:${password}@rabbitmq:${rbmqPort}`;
+
 const wss = new WebSocket.Server({ port: port});
 
-db.sync({ force: false }).then(() => {
-    console.log('Database Synced!');
-}).catch((error) => {
-    console.error('Unable to sync Database : ', error);
-}).then(() => {
-    wss.on('connection', (ws) => { // Advanced WS Server - https://ably.com/blog/websockets-react-tutorial
-        ws.on('message', (message) => {
-            try {
+(async function startServer() {
+    try {
+        console.log("Starting Server...");
+
+        // RabbitMQ Sync
+        const connection = await amqp.connect(RABBIT_URL);
+        const channel = await connection.createChannel();
+        const queue = 'server_queue';
+        connection.on('close', () => {
+            console.error('RabbitMQ connection closed unexpectedly');
+        });
+        console.log('RabbitMQ connection established');
+
+        // Database Sync
+        try {
+            await db.sync({ force: false, logging: false });
+            console.log('Database synced and connection established');
+        } catch (error) {
+            console.error('Unable to sync Database: ', error);
+        }
+
+        // Server Sync
+        wss.on('connection', (ws) => {
+            ws.on('message', (message) => {
                 const parsedMessage = JSON.parse(message.toString());
+
+                const controllerParams: [Channel, string, WebSocket, string, string] = [
+                    channel,
+                    queue,
+                    ws,
+                    parsedMessage.message,
+                    parsedMessage.params
+                ]
         
+                // Client Request Type Handling
                 switch(parsedMessage.type) {
                     case "request":
                         console.log('received: %s', message);
-                        wsController(ws, parsedMessage.message, parsedMessage.params);
+                        wsController(...controllerParams);
                         break;
-        
+                        
                     case "ping":
                         console.log('received: %s', message);
                         ws.send(JSON.stringify({ type: "ping", message: "Hello Client" }));
@@ -32,37 +62,12 @@ db.sync({ force: false }).then(() => {
                         ws.send(JSON.stringify({ type: "error", message: "Unknown message type" }));
                         break;
                 }
-            } catch(error) {
-                ws.send(JSON.stringify({ type: "error", message: "Invalid JSON format" }));
-            }
+
+            });
         });
-    });
+        console.log('Websocket Server Running');
 
-    listenToRabbitMQ();
-    console.log('Listening to RabbitMQ');
-
-    console.log('Websocket Server Running');
-});
-
-function listenToRabbitMQ() {
-    if (rbmqChannel) {
-        rbmqChannel.consume('websocket_queue', (msg: Message | null) => {
-            if(msg) {
-                const message = msg.content.toString();
-                console.log('Received message from RabbitMQ:', message);
-        
-                // Broadcast the message to all connected WebSocket clients
-                /* wss.clients.forEach((client) => {
-                    if (client.readyState === WebSocket.OPEN) {
-                        client.send(message);
-                    }
-                }); */
-        
-                // Acknowledge the message
-                rbmqChannel.ack(msg);
-            } else {
-                console.log("Message is Null");
-            }
-        });
+    } catch(error) {
+        console.log("Error occured during startup:", error)
     }
-}
+})();
