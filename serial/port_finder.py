@@ -8,7 +8,6 @@ def list_connected_ports():
     connected_ports = []
     
     for port in ports:
-        print(f"Port: {port.device}, Description: {port.description}")
         try:
             connected_ports.append(port.device)
         except serial.SerialException as e:
@@ -18,4 +17,4 @@ def list_connected_ports():
     return connected_ports
 
 connected_ports = list_connected_ports()
-print(f"Connected serial ports: {connected_ports}")
+print(connected_ports)

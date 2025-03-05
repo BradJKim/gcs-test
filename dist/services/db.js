@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createCubesat = createCubesat;
 exports.getAllCubesats = getAllCubesats;
+exports.updateCubesat = updateCubesat;
 exports.deleteCubesat = deleteCubesat;
 const cubesat_1 = __importDefault(require("../models/cubesat"));
 function createCubesat(id) {
@@ -38,6 +39,23 @@ function getAllCubesats() {
         }
         catch (error) {
             return JSON.stringify({ status: 'failure', message: `Cubesat creation unsuccessfull: ${error}` });
+        }
+    });
+}
+function updateCubesat(id, name) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const result = yield cubesat_1.default.update({
+                name: name
+            }, {
+                where: {
+                    id: id,
+                },
+            });
+            return JSON.stringify({ status: 'success', message: 'Cubesat updated successfully', data: result });
+        }
+        catch (error) {
+            return JSON.stringify({ status: 'failure', message: `Cubesat updated unsuccessfull: ${error}` });
         }
     });
 }

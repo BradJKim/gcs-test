@@ -23,6 +23,24 @@ export async function getAllCubesats() {
     }
 }
 
+export async function updateCubesat(id: number, name: string) {
+    try {
+        const result = await Cubesat.update(
+            {
+                name: name
+            }, {
+                where: {
+                  id: id,
+                },
+            }
+        );
+
+        return JSON.stringify({status: 'success', message: 'Cubesat updated successfully', data: result});
+    } catch(error) {
+        return JSON.stringify({status: 'failure', message: `Cubesat updated unsuccessfull: ${error}`});
+    }
+}
+
 export async function deleteCubesat() {
     try {
         await Cubesat.destroy({

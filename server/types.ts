@@ -1,5 +1,6 @@
 interface Cubesat {
-    id: number
+    id: number,
+    name: string
 }
 
 interface Message {

@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { createCubesat } from "../services/db";
+import { createCubesat, updateCubesat } from "../services/db";
 import { Channel } from "amqplib";
 
 export default function wsController(channel: Channel, queue: string, ws: WebSocket, message: string, params: string): void {
@@ -37,6 +37,25 @@ export default function wsController(channel: Channel, queue: string, ws: WebSoc
         }
     }
 
+    /**
+     * DB request update cubesat
+     */
+    const editCubesat = async () => {
+        const cubesatJson: Cubesat = JSON.parse(params);
+
+        const id = cubesatJson['id'];
+        const name = cubesatJson['name'];
+
+        let response = await updateCubesat(id, name);
+        response = await response;
+        const result = JSON.parse(response);
+
+        if(result.status === 'success') {
+            ws.send(JSON.stringify({ type: "success", message: "Created Cubesat" }));
+        } else if (result.status === 'failure') {
+            ws.send(JSON.stringify({ type: "failure", message: `Unable to create Cubesat: ${result.message}` }));
+        }
+    }
 
     /* ROUTING */
 
@@ -46,10 +65,13 @@ export default function wsController(channel: Channel, queue: string, ws: WebSoc
     else if(message === 'add') {
         addCubesat()
     }
-    else if (message === 'remove') {
-        //removeCubesat()
-        ws.send(JSON.stringify({ type: "success", message: "Removed Cubesat" }));
+    else if(message === 'update') {
+        editCubesat()
     }
+    /* else if (message === 'remove') {
+        removeCubesat()
+        ws.send(JSON.stringify({ type: "success", message: "Removed Cubesat" }));
+    } */
     else { // message unknown
         ws.send(JSON.stringify({ type: "error", message: "Unknown request" }));
     }

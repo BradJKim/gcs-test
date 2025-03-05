@@ -41,6 +41,23 @@ function wsController(channel, queue, ws, message, params) {
             ws.send(JSON.stringify({ type: "failure", message: `Unable to create Cubesat: ${result.message}` }));
         }
     });
+    /**
+     * DB request update cubesat
+     */
+    const editCubesat = () => __awaiter(this, void 0, void 0, function* () {
+        const cubesatJson = JSON.parse(params);
+        const id = cubesatJson['id'];
+        const name = cubesatJson['name'];
+        let response = yield (0, db_1.updateCubesat)(id, name);
+        response = yield response;
+        const result = JSON.parse(response);
+        if (result.status === 'success') {
+            ws.send(JSON.stringify({ type: "success", message: "Created Cubesat" }));
+        }
+        else if (result.status === 'failure') {
+            ws.send(JSON.stringify({ type: "failure", message: `Unable to create Cubesat: ${result.message}` }));
+        }
+    });
     /* ROUTING */
     if (message === 'send') {
         sendMessage();
@@ -48,10 +65,13 @@ function wsController(channel, queue, ws, message, params) {
     else if (message === 'add') {
         addCubesat();
     }
-    else if (message === 'remove') {
-        //removeCubesat()
-        ws.send(JSON.stringify({ type: "success", message: "Removed Cubesat" }));
+    else if (message === 'update') {
+        editCubesat();
     }
+    /* else if (message === 'remove') {
+        removeCubesat()
+        ws.send(JSON.stringify({ type: "success", message: "Removed Cubesat" }));
+    } */
     else { // message unknown
         ws.send(JSON.stringify({ type: "error", message: "Unknown request" }));
     }
