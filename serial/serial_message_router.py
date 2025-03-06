@@ -7,38 +7,40 @@ from port_finder import list_connected_ports
 import serial
 import time
 import sys
+import threading
 
 s1_port_name = 'COM6'
-s2_port_name = s1_port_name
+# s2_port_name = s1_port_name
 
 consumer_queue = "serial_queue"
 publisher_queue = "server_queue"
 
 ports_created = False
 queues_created = False
+start_thread = False
     
 try:
     """ Serial Port Initialization """
 
-    print("Syncing Ports...")
+    print("Syncing Ports")
 
     ports = list_connected_ports()
 
-    if (s1_port_name not in ports or s2_port_name not in ports):
+    if (s1_port_name not in ports ): # or s2_port_name not in ports
         print("Listed Serial port not found, unable to create ")
         print("Run port_finder.py to manually search for open Serial Ports")
         sys.exit()
 
     s1 = serial.Serial(s1_port_name, baudrate=115200, timeout=1)
-    s2 = serial.Serial(s2_port_name)
+    # s2 = serial.Serial(s2_port_name)
     
     ports_created = True
 
     def write_to_serial(port, message):
         if port == s1_port_name:
             s1.write(message.encode())
-        elif port == s2_port_name:
-            s2.write(message.encode())
+        #elif port == s2_port_name:
+        #    s2.write(message.encode())
         else:
             print("Error in Writing to Serial: Port not found")
         
@@ -46,6 +48,8 @@ try:
 
     """ RabbitMQ Port Creation """
 
+    print("Creating RBMQ Connections")
+    
     rabbitmq_publish = RabbitMQ()
     rabbitmq_consume = RabbitMQ()
     
@@ -55,26 +59,25 @@ try:
     
     """ Publisher Initization """
 
-    print("Creating Publisher...")
+    print("Creating Publisher")
 
     def send_message_to_rbmq(sending_message='Test message'):
         rabbitmq_publish.publish(queue_name=publisher_queue, message=sending_message)
-        print(f"Sent message: {sending_message}")
+        print(f"Sent message via publisher: {sending_message}")
 
 
 
     """ Callback Functions """
 
-    print("Setting Callback Functions...")
+    print("Setting Callback Functions")
 
-    def consumer_callback(body):
-        print(f"Received {body}")
+    def consumer_callback(ch, method, props, body):
+        print(f"Received from Server: {body}")
         
         # TODO: create serial message
         write_to_serial(s1, body)
 
     def serial_callback(body):
-        print(f"Received {body}")
         
         # TODO: create rbmq message
         send_message_to_rbmq(sending_message=body)
@@ -83,31 +86,40 @@ try:
 
     """ Consumer Initialization """
 
-    print("Creating Consumer...")
+    print("Creating Consumer Thread")
         
-    rabbitmq_consume.consume(queue_name=consumer_queue, callback=consumer_callback)
-
+    consumer_thread = threading.Thread(target=rabbitmq_consume.consume, args=(consumer_queue, consumer_callback))
+    consumer_thread.start()
+    start_thread = True
     
     
     """ Serial Listener Initialization """
 
-    print("Setting Serial Listeners...")
+    print("Activating Serial Listeners:")
 
     while True:
         line = s1.readline().decode().strip()
         if line:
-            print("Received:", line)
-        # serial_callback(res)
+            print("Received from Pico:", line)
         
+        serial_callback(line)
+                
         time.sleep(2) # optional change time
 
 finally:
+    print("\nSTOP PROGRAM - Closing Ports/Connections:")
+    
     if ports_created:
         if s1.is_open:  s1.close()
-        if s2.is_open:  s2.close()
+        # if s2.is_open:  s2.close()
         print("Serial Ports Closed")
     
     if queues_created:
-        rabbitmq_consume.close()
         rabbitmq_publish.close()
-        print("RabbitMQ Connections Closed")
+        print("Publisher Connection closed")
+        
+    if start_thread:
+        rabbitmq_consume.stop()
+        print("Consumer Connection closed.")
+        consumer_thread.join(timeout=1)
+        print("Consumer Thread Stopped\n")

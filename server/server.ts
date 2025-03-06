@@ -16,19 +16,6 @@ const wss = new WebSocket.Server({ port: port});
     try {
         console.log("Starting Server...");
 
-        // RabbitMQ Sync
-        const connection = await amqp.connect(RABBIT_URL);
-        const channel = await connection.createChannel();
-        const consumer_queue = 'server_queue';
-        const publisher_queue = 'serial_queue';
-
-        await channel.assertQueue(consumer_queue);
-
-        connection.on('close', () => {
-            console.error('RabbitMQ connection closed unexpectedly');
-        });
-        console.log('RabbitMQ connection established');
-
         // Database Sync
         try {
             await db.sync({ force: false, logging: false });
@@ -37,44 +24,59 @@ const wss = new WebSocket.Server({ port: port});
             console.error('Unable to sync Database: ', error);
         }
 
+        // RabbitMQ Sync
+        const connection = await amqp.connect(RABBIT_URL);
+        const channel = await connection.createChannel();
+        const consumer_queue = 'server_queue';
+        const publisher_queue = 'serial_queue';
+
+        await channel.assertQueue(consumer_queue, { durable: true });
+
+        connection.on('close', () => {
+            console.error('RabbitMQ connection closed unexpectedly');
+        });
+        console.log('RabbitMQ connection established');
+
+        // Establish Listener for Cubesat Response Handling
+        channel.consume(consumer_queue, (msg: Message | null) => {
+            if (msg !== null) {
+                const message = msg.content.toString()
+                console.log('Received:', message);
+                channel.ack(msg);
+
+                const parsedMessage = JSON.parse(message); // TODO: Error check make sure message is json or else it crashes
+
+                const controllerParams: [Channel, string, string, string] = [
+                    channel,
+                    publisher_queue,
+                    // ws,
+                    parsedMessage.message,
+                    parsedMessage.params
+                ]
+
+                switch(parsedMessage.type) {
+                    case "response":
+                        // wsController(...controllerParams);
+                        break;
+                        
+                    case "ping":
+                        channel.sendToQueue(publisher_queue, Buffer.from("Ping received by server"));
+                        break;
+
+                    default:
+                        channel.sendToQueue(publisher_queue, Buffer.from("Invalid Message Type, rejecting message"));
+                        break;
+                }
+
+            } else {
+                console.log('Consumer cancelled by server');
+            }
+        });
+        console.log('Consumer Running');
+
+
         // Websocket Server Sync
         wss.on('connection', (ws) => {
-
-            // Establish Listener for Cubesat Response Handling
-            channel.consume(consumer_queue, (msg: Message | null) => {
-                if (msg !== null) {
-                    const message = msg.content.toString()
-                    console.log('Received:', message);
-                    channel.ack(msg);
-
-                    const parsedMessage = JSON.parse(message);
-
-                    const controllerParams: [Channel, string, WebSocket, string, string] = [
-                        channel,
-                        publisher_queue,
-                        ws,
-                        parsedMessage.message,
-                        parsedMessage.params
-                    ]
-
-                    switch(parsedMessage.type) {
-                        case "response":
-                            wsController(...controllerParams);
-                            break;
-                            
-                        case "ping":
-                            channel.sendToQueue(publisher_queue, Buffer.from("Ping received by server"));
-                            break;
-
-                        default:
-                            channel.sendToQueue(publisher_queue, Buffer.from("Invalid Message Type, rejecting message"));
-                            break;
-                    }
-
-                } else {
-                    console.log('Consumer cancelled by server');
-                }
-            });
 
             // Client Request Type Handling
             ws.on('message', (message) => {
