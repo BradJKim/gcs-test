@@ -10,6 +10,8 @@ load_dotenv()
 
 class RabbitMQ:
     def __init__(self):
+        print(os.getenv('RABBITMQ_HOST'))
+        
         self.user = os.getenv('RABBITMQ_USER', 'user')
         self.password = os.getenv('RABBITMQ_PASS', 'password')
         self.host = os.getenv('RABBITMQ_HOST', 'localhost')
@@ -26,9 +28,7 @@ class RabbitMQ:
         try:
             self.connection = pika.BlockingConnection(parameters)
             self.channel = self.connection.channel()
-            
-            print(self.channel)
-                        
+                                    
             if not self.channel:
                 raise Exception("Connection is not established.")
             else:

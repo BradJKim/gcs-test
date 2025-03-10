@@ -44,30 +44,34 @@ const wss = new WebSocket.Server({ port: port});
                 console.log('Received:', message);
                 channel.ack(msg);
 
-                const parsedMessage = JSON.parse(message); // TODO: Error check make sure message is json or else it crashes
+                try {
+                    const parsedMessage = JSON.parse(message);
 
-                const controllerParams: [Channel, string, string, string] = [
-                    channel,
-                    publisher_queue,
-                    // ws,
-                    parsedMessage.message,
-                    parsedMessage.params
-                ]
+                    const controllerParams: [Channel, string, string, string] = [
+                        channel,
+                        publisher_queue,
+                        // ws,
+                        parsedMessage.message,
+                        parsedMessage.params
+                    ]
 
-                switch(parsedMessage.type) {
-                    case "response":
-                        // wsController(...controllerParams);
-                        break;
-                        
-                    case "ping":
-                        channel.sendToQueue(publisher_queue, Buffer.from("Ping received by server"));
-                        break;
+                    switch(parsedMessage.type) {
+                        case "response":
+                            // wsController(...controllerParams);
+                            break;
+                            
+                        case "ping":
+                            channel.sendToQueue(publisher_queue, Buffer.from("Ping received by server"));
+                            break;
 
-                    default:
-                        channel.sendToQueue(publisher_queue, Buffer.from("Invalid Message Type, rejecting message"));
-                        break;
+                        default:
+                            channel.sendToQueue(publisher_queue, Buffer.from("Invalid Message Type, rejecting message"));
+                            break;
+                    }
+
+                } catch (error) {
+                    console.error('Error while handling message: ', error);
                 }
-
             } else {
                 console.log('Consumer cancelled by server');
             }

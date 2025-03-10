@@ -8,6 +8,7 @@ import serial
 import time
 import sys
 import threading
+import json
 
 s1_port_name = 'COM6'
 # s2_port_name = s1_port_name
@@ -22,7 +23,7 @@ start_thread = False
 try:
     """ Serial Port Initialization """
 
-    print("Syncing Ports")
+    """ print("Syncing Ports")
 
     ports = list_connected_ports()
 
@@ -43,7 +44,7 @@ try:
         #    s2.write(message.encode())
         else:
             print("Error in Writing to Serial: Port not found")
-        
+         """
 
 
     """ RabbitMQ Port Creation """
@@ -75,7 +76,7 @@ try:
         print(f"Received from Server: {body}")
         
         # TODO: create serial message
-        write_to_serial(s1, body)
+        """ write_to_serial(s1, body) """
 
     def serial_callback(body):
         
@@ -98,11 +99,16 @@ try:
     print("Activating Serial Listeners:")
 
     while True:
-        line = s1.readline().decode().strip()
+        """ line = s1.readline().decode().strip()
         if line:
             print("Received from Pico:", line)
         
-        serial_callback(line)
+        serial_callback(line) """
+        
+        data = {'type': 'ping'}
+        json_data = json.dumps(data)
+        
+        serial_callback(str(json_data))
                 
         time.sleep(2) # optional change time
 
@@ -110,7 +116,7 @@ finally:
     print("\nSTOP PROGRAM - Closing Ports/Connections:")
     
     if ports_created:
-        if s1.is_open:  s1.close()
+        """ if s1.is_open:  s1.close() """
         # if s2.is_open:  s2.close()
         print("Serial Ports Closed")
     
