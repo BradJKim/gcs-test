@@ -20,18 +20,6 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
-  python:
-    build:
-      context: .
-      dockerfile: dockerfile-python
-    restart: always
-    environment:
-      RABBITMQ_USER: guest
-      RABBITMQ_PASS: guest
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-    depends_on:
-      - rabbitmq
   backend:
     build:
       context: .
@@ -54,6 +42,5 @@ services:
     depends_on:
       - db
       - rabbitmq
-      # - python
 volumes:
   db_data:
