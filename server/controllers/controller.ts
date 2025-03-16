@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { createCubesat, updateCubesat } from "../services/db";
+import { createCubesat, updateCubesat, getAllCubesats} from "../services/db";
 import { Channel } from "amqplib";
 
 export default function wsController(channel: Channel, queue: string, ws: WebSocket, message: string, params: string): void {
@@ -21,6 +21,21 @@ export default function wsController(channel: Channel, queue: string, ws: WebSoc
     }
 
     /**
+     * DB request to get all cubesats
+     */
+    const getCubesats = async () => {
+        let response = await getAllCubesats();
+        response = await response;
+        const result = JSON.parse(response);
+
+        if(result.status === 'success') {
+            ws.send(JSON.stringify({ type: "success", message: result.message, data: result.data}));
+        } else if (result.status === 'failure') {
+            ws.send(JSON.stringify({ type: "failure", message: result.message }));
+        }
+    }
+
+    /**
      * DB request add cubesat
      */
     const addCubesat = async () => {
@@ -31,9 +46,9 @@ export default function wsController(channel: Channel, queue: string, ws: WebSoc
         const result = JSON.parse(response);
 
         if(result.status === 'success') {
-            ws.send(JSON.stringify({ type: "success", message: "Created Cubesat" }));
+            ws.send(JSON.stringify({ type: "success", message: result.message }));
         } else if (result.status === 'failure') {
-            ws.send(JSON.stringify({ type: "failure", message: `Unable to create Cubesat: ${result.message}` }));
+            ws.send(JSON.stringify({ type: "failure", message: result.message }));
         }
     }
 
@@ -51,9 +66,9 @@ export default function wsController(channel: Channel, queue: string, ws: WebSoc
         const result = JSON.parse(response);
 
         if(result.status === 'success') {
-            ws.send(JSON.stringify({ type: "success", message: "Created Cubesat" }));
+            ws.send(JSON.stringify({ type: "success", message: result.message }));
         } else if (result.status === 'failure') {
-            ws.send(JSON.stringify({ type: "failure", message: `Unable to create Cubesat: ${result.message}` }));
+            ws.send(JSON.stringify({ type: "failure", message: result.message }));
         }
     }
 
@@ -63,10 +78,13 @@ export default function wsController(channel: Channel, queue: string, ws: WebSoc
         sendMessage();
     }
     else if(message === 'add') {
-        addCubesat()
+        addCubesat();
     }
     else if(message === 'update') {
-        editCubesat()
+        editCubesat();
+    }
+    else if(message === 'getAll') {
+        getCubesats();
     }
     /* else if (message === 'remove') {
         removeCubesat()

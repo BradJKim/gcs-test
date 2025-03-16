@@ -3,6 +3,8 @@ import wsController from './controllers/controller';
 import db from './config/dbConfig';
 import amqp, { Channel, Message } from 'amqplib'
 
+const clients: Map<string, WebSocket> = new Map();
+
 const port = 8080
 
 const username = process.env.RABBITMQ_USER;
@@ -37,48 +39,6 @@ const wss = new WebSocket.Server({ port: port});
         });
         console.log('RabbitMQ connection established');
 
-        // Establish Listener for Cubesat Response Handling
-        channel.consume(consumer_queue, (msg: Message | null) => {
-            if (msg !== null) {
-                const message = msg.content.toString()
-                console.log('Received:', message);
-                channel.ack(msg);
-
-                try {
-                    const parsedMessage = JSON.parse(message);
-
-                    const controllerParams: [Channel, string, string, string] = [
-                        channel,
-                        publisher_queue,
-                        // ws,
-                        parsedMessage.message,
-                        parsedMessage.params
-                    ]
-
-                    switch(parsedMessage.type) {
-                        case "response":
-                            // wsController(...controllerParams);
-                            break;
-                            
-                        case "ping":
-                            channel.sendToQueue(publisher_queue, Buffer.from("Ping received by server"));
-                            break;
-
-                        default:
-                            channel.sendToQueue(publisher_queue, Buffer.from("Invalid Message Type, rejecting message"));
-                            break;
-                    }
-
-                } catch (error) {
-                    console.error('Error while handling message: ', error);
-                }
-            } else {
-                console.log('Consumer cancelled by server');
-            }
-        });
-        console.log('Consumer Running');
-
-
         // Websocket Server Sync
         wss.on('connection', (ws) => {
 
@@ -86,6 +46,10 @@ const wss = new WebSocket.Server({ port: port});
             ws.on('message', (message) => {
                 console.log('received: %s', message);
                 const parsedMessage = JSON.parse(message.toString());
+
+                if (parsedMessage.clientId) {
+                    clients.set(parsedMessage.clientId, ws);
+                }
 
                 const controllerParams: [Channel, string, WebSocket, string, string] = [
                     channel,
@@ -108,10 +72,72 @@ const wss = new WebSocket.Server({ port: port});
                         ws.send(JSON.stringify({ type: "error", message: "Unknown message type" }));
                         break;
                 }
-
             });
+
+            ws.on('close', () => {
+                clients.forEach((value, key) => {
+                    if (value === ws) {
+                        clients.delete(key);
+                    }
+                });
+                console.log("WebSocket Disconnected");
+            });
+
         });
         console.log('Websocket Server Running');
+
+        // Establish Listener for Cubesat Response Handling
+        channel.consume(consumer_queue, (msg: Message | null) => {
+            if (msg !== null) {
+                const message = msg.content.toString()
+                console.log('Received:', message);
+                channel.ack(msg);
+
+                try {
+                    const parsedMessage = JSON.parse(message);
+
+                    console.log(clients);
+                    console.log(parsedMessage.clientId)
+
+                    if (parsedMessage.clientId && clients.has(parsedMessage.clientId)) {
+                        const ws = clients.get(parsedMessage.clientId);
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+
+                            const controllerParams: [Channel, string, WebSocket, string, string] = [
+                                channel,
+                                publisher_queue,
+                                ws,
+                                parsedMessage.message,
+                                parsedMessage.params
+                            ]
+        
+                            switch(parsedMessage.type) {
+                                case "response":
+                                    wsController(...controllerParams);
+                                    break;
+                                    
+                                case "ping":
+                                    channel.sendToQueue(publisher_queue, Buffer.from("Ping received by server"));
+                                    break;
+        
+                                default:
+                                    channel.sendToQueue(publisher_queue, Buffer.from("Invalid Message Type, rejecting message"));
+                                    break;
+                            }
+
+                        }
+                    } else {
+                        console.warn("No matching WebSocket client found for message:", parsedMessage);
+                    }
+
+                } catch (error) {
+                    console.error('Error while handling message: ', error);
+                }
+            } else {
+                console.log('Message is null, Consumer cancelled by server');
+            }
+        });
+        console.log('Consumer Running');
 
     } catch(error) {
         console.log("Error occured during startup:", error)

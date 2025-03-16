@@ -35,10 +35,10 @@ function getAllCubesats() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const result = yield cubesat_1.default.findAll();
-            return JSON.stringify({ status: 'success', message: 'Cubesat created successfully', data: result });
+            return JSON.stringify({ status: 'success', message: 'All Cubesats returned successfully', data: result });
         }
         catch (error) {
-            return JSON.stringify({ status: 'failure', message: `Cubesat creation unsuccessfull: ${error}` });
+            return JSON.stringify({ status: 'failure', message: `Cubesats not returned successfull: ${error}` });
         }
     });
 }
@@ -65,10 +65,10 @@ function deleteCubesat() {
             yield cubesat_1.default.destroy({
                 where: { name: 'drone' }
             });
-            return JSON.stringify({ status: 'success', message: 'Cubesat created successfully' });
+            return JSON.stringify({ status: 'success', message: 'Cubesat destroyed successfully' });
         }
         catch (error) {
-            return JSON.stringify({ status: 'failure', message: `Cubesat creation unsuccessfull: ${error}` });
+            return JSON.stringify({ status: 'failure', message: `Cubesat destroyed unsuccessfull: ${error}` });
         }
     });
 }

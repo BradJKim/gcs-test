@@ -27,6 +27,21 @@ function wsController(channel, queue, ws, message, params) {
         }
     };
     /**
+     * DB request to get all cubesats
+     */
+    const getCubesats = () => __awaiter(this, void 0, void 0, function* () {
+        let response = yield (0, db_1.getAllCubesats)();
+        response = yield response;
+        console.log(response);
+        const result = JSON.parse(response);
+        if (result.status === 'success') {
+            ws.send(JSON.stringify({ type: "success", message: "Return all Cubesats", data: result.data }));
+        }
+        else if (result.status === 'failure') {
+            ws.send(JSON.stringify({ type: "failure", message: `Unable to create Cubesat: ${result.message}` }));
+        }
+    });
+    /**
      * DB request add cubesat
      */
     const addCubesat = () => __awaiter(this, void 0, void 0, function* () {
@@ -67,6 +82,9 @@ function wsController(channel, queue, ws, message, params) {
     }
     else if (message === 'update') {
         editCubesat();
+    }
+    else if (message === 'getAll') {
+        getCubesats();
     }
     /* else if (message === 'remove') {
         removeCubesat()
