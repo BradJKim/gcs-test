@@ -6,7 +6,7 @@ const Cubesat = db.define("cubesat", {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
-        allowNull: true,
+        allowNull: false,
     },
     name: {
         type: DataTypes.STRING,

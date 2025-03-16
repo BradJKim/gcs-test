@@ -42,12 +42,11 @@ function getAllCubesats() {
         }
     });
 }
-function updateCubesat(id, name) {
+function updateCubesat(id, fields) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const result = yield cubesat_1.default.update({
-                name: name
-            }, {
+            // Perform the update with dynamic fields
+            const result = yield cubesat_1.default.update(fields, {
                 where: {
                     id: id,
                 },

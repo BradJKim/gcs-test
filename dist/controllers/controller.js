@@ -8,6 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = wsController;
 const db_1 = require("../services/db");
@@ -58,12 +69,11 @@ function wsController(channel, queue, ws, message, params) {
      */
     const editCubesat = () => __awaiter(this, void 0, void 0, function* () {
         const cubesatJson = JSON.parse(params);
-        const id = cubesatJson['id'];
-        const name = cubesatJson['name'];
-        const response = yield (0, db_1.updateCubesat)(id, name);
+        const { id } = cubesatJson, parameters = __rest(cubesatJson, ["id"]);
+        const response = yield (0, db_1.updateCubesat)(id, parameters);
         const result = yield response;
         if (result.status === 'success') {
-            ws.send(JSON.stringify({ type: "success", message: result.message }));
+            ws.send(JSON.stringify({ type: "success", message: result.message, data: result.data }));
         }
         else if (result.status === 'failure') {
             ws.send(JSON.stringify({ type: "failure", message: result.message }));

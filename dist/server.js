@@ -99,7 +99,7 @@ const wss = new ws_1.default.Server({ port: port });
                                     publisher_queue,
                                     ws,
                                     parsedMessage.message,
-                                    parsedMessage.params
+                                    JSON.stringify(parsedMessage.params)
                                 ];
                                 switch (parsedMessage.type) {
                                     case "response":

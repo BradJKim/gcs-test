@@ -22,45 +22,49 @@ function Main() {
 
 		if (ws.ready) {
 			//ws.send(JSON.stringify({type: 'ping', message: 'Hello, server!'}));
-			ws.send(JSON.stringify({type: 'request', message: 'getAll'}));
-
 			setWaiting(true);
+			ws.send(JSON.stringify({type: 'request', message: 'getAll'}));
 		}
 
 		return () => clearInterval(interval);
 	}, [ws.ready]);
 
 	useEffect(() => {
-		if (waiting) {
-			const response = JSON.parse(ws.value!);
-	
-			if(response.message === "Cubesat updated successfully") {
-				setCubesats(response.data);
-			} 
-			else if(response.message === "Cubesat added successfully") {
-				setCubesats(response.data);
-			}
+		console.log('hello')
 
-			setWaiting(false);
+		if (waiting && ws.value) {
+			const response = JSON.parse(ws.value!);
+
+			console.log("waiting")
+			
+			if(response.message === "All Cubesats returned successfully") {
+				setCubesats(response.data);
+
+				setWaiting(false);
+			}
+			
 		}
-	}, [ws]);
+	}, [waiting && ws.value]);
 
 	const getCubesatsButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
+		setWaiting(true);
 		ws.send(JSON.stringify({type: 'request', message: 'getAll'}));
+
 	}
 
 	const addButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
+		setWaiting(true);
 		ws.send(JSON.stringify({type: 'request', message: 'add', params: {id: count}}));
 		setCount(count + 1);
 	}
 
 	const updateButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
-		const paramters = {
+		const parameters = {
 			id: 0,
 			active: true,
-			x: {update}
+			x: update
 		}
-		ws.send(JSON.stringify({type: 'request', message: 'update', params: paramters}));
+		ws.send(JSON.stringify({type: 'request', message: 'update', params: parameters}));
 
 		setUpdate(Math.floor(Math.random() * (100 - 1 + 1)) + 1);
 	}
@@ -75,13 +79,13 @@ function Main() {
 				<button onClick={addButtonHandler} className="addCubesat">
 					Add Cubesat
 				</button>
-				<button onClick={updateButtonHandler} className="addCubesat">
+				<button onClick={updateButtonHandler} className="updateCubesat">
 					Update Cubesat
 				</button>
 			</div>
 			<div className="cubesats">
 				{cubesats.map((cubesat, index) => {
-					return (<Cubesat {...cubesat}/>);
+					return (<Cubesat key={index} {...cubesat}/>);
 				})}
 			</div>
 		</div>

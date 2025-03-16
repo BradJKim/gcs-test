@@ -9,11 +9,51 @@ const Cubesat = dbConfig_1.default.define("cubesat", {
     id: {
         type: sequelize_1.DataTypes.INTEGER,
         primaryKey: true,
-        allowNull: true,
+        allowNull: false,
     },
     name: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: true,
-    }
+    },
+    active: {
+        type: sequelize_1.DataTypes.BOOLEAN,
+        allowNull: true,
+    },
+    x: {
+        type: sequelize_1.DataTypes.FLOAT,
+        allowNull: true,
+    },
+    y: {
+        type: sequelize_1.DataTypes.FLOAT,
+        allowNull: true,
+    },
+    z: {
+        type: sequelize_1.DataTypes.FLOAT,
+        allowNull: true,
+    },
+    sun_location: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: true,
+    },
+    health: {
+        type: sequelize_1.DataTypes.FLOAT,
+        allowNull: true,
+    },
+    temperature: {
+        type: sequelize_1.DataTypes.FLOAT,
+        allowNull: true,
+    },
+    voltage: {
+        type: sequelize_1.DataTypes.FLOAT,
+        allowNull: true,
+    },
+    current: {
+        type: sequelize_1.DataTypes.FLOAT,
+        allowNull: true,
+    },
+    battery: {
+        type: sequelize_1.DataTypes.FLOAT,
+        allowNull: true,
+    },
 });
 exports.default = Cubesat;
