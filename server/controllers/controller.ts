@@ -24,9 +24,8 @@ export default function wsController(channel: Channel, queue: string, ws: WebSoc
      * DB request to get all cubesats
      */
     const getCubesats = async () => {
-        let response = await getAllCubesats();
-        response = await response;
-        const result = JSON.parse(response);
+        const response = await getAllCubesats();
+        const result = response;
 
         if(result.status === 'success') {
             ws.send(JSON.stringify({ type: "success", message: result.message, data: result.data}));
@@ -41,9 +40,8 @@ export default function wsController(channel: Channel, queue: string, ws: WebSoc
     const addCubesat = async () => {
         const cubesatJson: Cubesat = JSON.parse(params);
 
-        let response = await createCubesat(cubesatJson['id']);
-        response = await response;
-        const result = JSON.parse(response);
+        const response = await createCubesat(cubesatJson['id']);
+        const result = await response;
 
         if(result.status === 'success') {
             ws.send(JSON.stringify({ type: "success", message: result.message }));
@@ -58,12 +56,10 @@ export default function wsController(channel: Channel, queue: string, ws: WebSoc
     const editCubesat = async () => {
         const cubesatJson: Cubesat = JSON.parse(params);
 
-        const id = cubesatJson['id'];
-        const name = cubesatJson['name'];
+        const { id, ...parameters } = cubesatJson;
 
-        let response = await updateCubesat(id, name);
-        response = await response;
-        const result = JSON.parse(response);
+        const response = await updateCubesat(id, parameters);
+        const result = await response;
 
         if(result.status === 'success') {
             ws.send(JSON.stringify({ type: "success", message: result.message }));

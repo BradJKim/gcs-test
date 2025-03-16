@@ -45,6 +45,7 @@ const wss = new WebSocket.Server({ port: port});
             // Client Request Type Handling
             ws.on('message', (message) => {
                 console.log('received: %s', message);
+
                 const parsedMessage = JSON.parse(message.toString());
 
                 if (parsedMessage.clientId) {
@@ -56,7 +57,7 @@ const wss = new WebSocket.Server({ port: port});
                     publisher_queue,
                     ws,
                     parsedMessage.message,
-                    parsedMessage.params
+                    JSON.stringify(parsedMessage.params)
                 ]
         
                 switch(parsedMessage.type) {
@@ -96,9 +97,6 @@ const wss = new WebSocket.Server({ port: port});
                 try {
                     const parsedMessage = JSON.parse(message);
 
-                    console.log(clients);
-                    console.log(parsedMessage.clientId)
-
                     if (parsedMessage.clientId && clients.has(parsedMessage.clientId)) {
                         const ws = clients.get(parsedMessage.clientId);
                         if (ws && ws.readyState === WebSocket.OPEN) {
@@ -108,7 +106,7 @@ const wss = new WebSocket.Server({ port: port});
                                 publisher_queue,
                                 ws,
                                 parsedMessage.message,
-                                parsedMessage.params
+                                JSON.stringify(parsedMessage.params)
                             ]
         
                             switch(parsedMessage.type) {

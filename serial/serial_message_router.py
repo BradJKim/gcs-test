@@ -216,33 +216,3 @@ finally:
         print("Consumer Connection closed.")
         consumer_thread.join(timeout=1)
         print("Consumer Thread Stopped\n")
-        
-        
-        
-"""
-    Modes needed:
-        - Telemetry Mode
-        - File Transfer Mode
-
-    Inputs needed:
-        - (Message) Type -> string
-        - Message/CMD -> string
-        - Params -> JSON
-            - ID -> integer
-            - Name -> string
-            - (Optional) Telemetry Data ->
-                - X Y Z axis
-                - sun location
-                - health of the system
-                - current tempurate
-                - voltage level
-                - current level
-                - battery level
-                - movement data
-                - location
-                - heat
-            - (Optional) File Transfer Data
-                - Packet Payload
-                
-"""
-

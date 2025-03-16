@@ -7,9 +7,9 @@ export async function createCubesat(id: number) {
             name: 'drone'
         });
 
-        return JSON.stringify({status: 'success', message: 'Cubesat created successfully'});
+        return {status: 'success', message: 'Cubesat created successfully'};
     } catch(error) {
-        return JSON.stringify({status: 'failure', message: `Cubesat creation unsuccessfull: ${error}`});
+        return {status: 'failure', message: `Cubesat creation unsuccessfull: ${error}`};
     }
 }
 
@@ -17,27 +17,24 @@ export async function getAllCubesats() {
     try {
         const result = await Cubesat.findAll();
 
-        return JSON.stringify({status: 'success', message: 'All Cubesats returned successfully', data: result});
+        return {status: 'success', message: 'All Cubesats returned successfully', data: result};
     } catch(error) {
-        return JSON.stringify({status: 'failure', message: `Cubesats not returned successfull: ${error}`});
+        return {status: 'failure', message: `Cubesats not returned successfull: ${error}`};
     }
 }
 
-export async function updateCubesat(id: number, name: string) {
+export async function updateCubesat(id: number, fields: object) {
     try {
-        const result = await Cubesat.update(
-            {
-                name: name
-            }, {
-                where: {
-                  id: id,
-                },
-            }
-        );
+      // Perform the update with dynamic fields
+      const result = await Cubesat.update(fields, {
+        where: {
+          id: id,
+        },
+      });
 
-        return JSON.stringify({status: 'success', message: 'Cubesat updated successfully', data: result});
+        return {status: 'success', message: 'Cubesat updated successfully', data: result};
     } catch(error) {
-        return JSON.stringify({status: 'failure', message: `Cubesat updated unsuccessfull: ${error}`});
+        return {status: 'failure', message: `Cubesat updated unsuccessfull: ${error}`};
     }
 }
 
@@ -47,8 +44,8 @@ export async function deleteCubesat() {
             where: {name: 'drone'}
         });
 
-        return JSON.stringify({status: 'success', message: 'Cubesat destroyed successfully'});
+        return {status: 'success', message: 'Cubesat destroyed successfully'};
     } catch(error) {
-        return JSON.stringify({status: 'failure', message: `Cubesat destroyed unsuccessfull: ${error}`});
+        return {status: 'failure', message: `Cubesat destroyed unsuccessfull: ${error}`};
     }
 }

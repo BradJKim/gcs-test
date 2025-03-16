@@ -30,15 +30,13 @@ function wsController(channel, queue, ws, message, params) {
      * DB request to get all cubesats
      */
     const getCubesats = () => __awaiter(this, void 0, void 0, function* () {
-        let response = yield (0, db_1.getAllCubesats)();
-        response = yield response;
-        console.log(response);
-        const result = JSON.parse(response);
+        const response = yield (0, db_1.getAllCubesats)();
+        const result = response;
         if (result.status === 'success') {
-            ws.send(JSON.stringify({ type: "success", message: "Return all Cubesats", data: result.data }));
+            ws.send(JSON.stringify({ type: "success", message: result.message, data: result.data }));
         }
         else if (result.status === 'failure') {
-            ws.send(JSON.stringify({ type: "failure", message: `Unable to create Cubesat: ${result.message}` }));
+            ws.send(JSON.stringify({ type: "failure", message: result.message }));
         }
     });
     /**
@@ -46,14 +44,13 @@ function wsController(channel, queue, ws, message, params) {
      */
     const addCubesat = () => __awaiter(this, void 0, void 0, function* () {
         const cubesatJson = JSON.parse(params);
-        let response = yield (0, db_1.createCubesat)(cubesatJson['id']);
-        response = yield response;
-        const result = JSON.parse(response);
+        const response = yield (0, db_1.createCubesat)(cubesatJson['id']);
+        const result = yield response;
         if (result.status === 'success') {
-            ws.send(JSON.stringify({ type: "success", message: "Created Cubesat" }));
+            ws.send(JSON.stringify({ type: "success", message: result.message }));
         }
         else if (result.status === 'failure') {
-            ws.send(JSON.stringify({ type: "failure", message: `Unable to create Cubesat: ${result.message}` }));
+            ws.send(JSON.stringify({ type: "failure", message: result.message }));
         }
     });
     /**
@@ -63,14 +60,13 @@ function wsController(channel, queue, ws, message, params) {
         const cubesatJson = JSON.parse(params);
         const id = cubesatJson['id'];
         const name = cubesatJson['name'];
-        let response = yield (0, db_1.updateCubesat)(id, name);
-        response = yield response;
-        const result = JSON.parse(response);
+        const response = yield (0, db_1.updateCubesat)(id, name);
+        const result = yield response;
         if (result.status === 'success') {
-            ws.send(JSON.stringify({ type: "success", message: "Created Cubesat" }));
+            ws.send(JSON.stringify({ type: "success", message: result.message }));
         }
         else if (result.status === 'failure') {
-            ws.send(JSON.stringify({ type: "failure", message: `Unable to create Cubesat: ${result.message}` }));
+            ws.send(JSON.stringify({ type: "failure", message: result.message }));
         }
     });
     /* ROUTING */

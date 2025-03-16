@@ -24,10 +24,10 @@ function createCubesat(id) {
                 id: id,
                 name: 'drone'
             });
-            return JSON.stringify({ status: 'success', message: 'Cubesat created successfully' });
+            return { status: 'success', message: 'Cubesat created successfully' };
         }
         catch (error) {
-            return JSON.stringify({ status: 'failure', message: `Cubesat creation unsuccessfull: ${error}` });
+            return { status: 'failure', message: `Cubesat creation unsuccessfull: ${error}` };
         }
     });
 }
@@ -35,10 +35,10 @@ function getAllCubesats() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const result = yield cubesat_1.default.findAll();
-            return JSON.stringify({ status: 'success', message: 'All Cubesats returned successfully', data: result });
+            return { status: 'success', message: 'All Cubesats returned successfully', data: result };
         }
         catch (error) {
-            return JSON.stringify({ status: 'failure', message: `Cubesats not returned successfull: ${error}` });
+            return { status: 'failure', message: `Cubesats not returned successfull: ${error}` };
         }
     });
 }
@@ -52,10 +52,10 @@ function updateCubesat(id, name) {
                     id: id,
                 },
             });
-            return JSON.stringify({ status: 'success', message: 'Cubesat updated successfully', data: result });
+            return { status: 'success', message: 'Cubesat updated successfully', data: result };
         }
         catch (error) {
-            return JSON.stringify({ status: 'failure', message: `Cubesat updated unsuccessfull: ${error}` });
+            return { status: 'failure', message: `Cubesat updated unsuccessfull: ${error}` };
         }
     });
 }
@@ -65,10 +65,10 @@ function deleteCubesat() {
             yield cubesat_1.default.destroy({
                 where: { name: 'drone' }
             });
-            return JSON.stringify({ status: 'success', message: 'Cubesat destroyed successfully' });
+            return { status: 'success', message: 'Cubesat destroyed successfully' };
         }
         catch (error) {
-            return JSON.stringify({ status: 'failure', message: `Cubesat destroyed unsuccessfull: ${error}` });
+            return { status: 'failure', message: `Cubesat destroyed unsuccessfull: ${error}` };
         }
     });
 }

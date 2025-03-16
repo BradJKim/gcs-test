@@ -59,7 +59,7 @@ const wss = new ws_1.default.Server({ port: port });
                         publisher_queue,
                         ws,
                         parsedMessage.message,
-                        parsedMessage.params
+                        JSON.stringify(parsedMessage.params)
                     ];
                     switch (parsedMessage.type) {
                         case "request":
@@ -91,8 +91,6 @@ const wss = new ws_1.default.Server({ port: port });
                     channel.ack(msg);
                     try {
                         const parsedMessage = JSON.parse(message);
-                        console.log(clients);
-                        console.log(parsedMessage.clientId);
                         if (parsedMessage.clientId && clients.has(parsedMessage.clientId)) {
                             const ws = clients.get(parsedMessage.clientId);
                             if (ws && ws.readyState === ws_1.default.OPEN) {

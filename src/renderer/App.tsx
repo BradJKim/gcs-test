@@ -3,7 +3,6 @@ import { useState, useEffect, useContext, useReducer } from 'react';
 import { WebsocketContext, WebsocketProvider } from './WebsocketProvider';
 import { Navbar, Cubesat} from "./components";
 import './App.css';
-import { TimeoutError } from 'sequelize';
 
 function Main() {
 	const ws = useContext(WebsocketContext);
@@ -11,6 +10,10 @@ function Main() {
 	const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
 	const [cubesats, setCubesats] = useState<any[]>([]);
+	const [waiting, setWaiting] = useState<boolean>(false); 
+
+	const [count, setCount] = useState(0);
+	const [update, setUpdate] = useState(0);
 
 	useEffect(() => {
 		const interval = setInterval(() => {
@@ -19,23 +22,47 @@ function Main() {
 
 		if (ws.ready) {
 			//ws.send(JSON.stringify({type: 'ping', message: 'Hello, server!'}));
-
 			ws.send(JSON.stringify({type: 'request', message: 'getAll'}));
 
-			while(!ws.ready) {
-				setTimeout(()=>{}, 10)
-			}
-
-			const response = JSON.parse(ws.value!);
-			setCubesats(response.data);
+			setWaiting(true);
 		}
 
 		return () => clearInterval(interval);
 	}, [ws.ready]);
 
+	useEffect(() => {
+		if (waiting) {
+			const response = JSON.parse(ws.value!);
+	
+			if(response.message === "Cubesat updated successfully") {
+				setCubesats(response.data);
+			} 
+			else if(response.message === "Cubesat added successfully") {
+				setCubesats(response.data);
+			}
+
+			setWaiting(false);
+		}
+	}, [ws]);
+
 	const getCubesatsButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
 		ws.send(JSON.stringify({type: 'request', message: 'getAll'}));
-		// ws.value
+	}
+
+	const addButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
+		ws.send(JSON.stringify({type: 'request', message: 'add', params: {id: count}}));
+		setCount(count + 1);
+	}
+
+	const updateButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
+		const paramters = {
+			id: 0,
+			active: true,
+			x: {update}
+		}
+		ws.send(JSON.stringify({type: 'request', message: 'update', params: paramters}));
+
+		setUpdate(Math.floor(Math.random() * (100 - 1 + 1)) + 1);
 	}
 
 	return (
@@ -45,13 +72,16 @@ function Main() {
 				<button onClick={getCubesatsButtonHandler} className="getCubesats">
 					Get Cubesats
 				</button>
+				<button onClick={addButtonHandler} className="addCubesat">
+					Add Cubesat
+				</button>
+				<button onClick={updateButtonHandler} className="addCubesat">
+					Update Cubesat
+				</button>
 			</div>
 			<div className="cubesats">
 				{cubesats.map((cubesat, index) => {
-					return (<Cubesat
-								id={cubesat.id}
-								name={cubesat.name}
-							/>);
+					return (<Cubesat {...cubesat}/>);
 				})}
 			</div>
 		</div>
