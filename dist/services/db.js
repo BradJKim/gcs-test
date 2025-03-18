@@ -51,7 +51,7 @@ function updateCubesat(id, fields) {
                     id: id,
                 },
             });
-            return { status: 'success', message: 'Cubesat updated successfully', data: result };
+            return { status: 'success', message: 'Cubesat updated successfully' };
         }
         catch (error) {
             return { status: 'failure', message: `Cubesat updated unsuccessfull: ${error}` };

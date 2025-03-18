@@ -73,7 +73,7 @@ function wsController(channel, queue, ws, message, params) {
         const response = yield (0, db_1.updateCubesat)(id, parameters);
         const result = yield response;
         if (result.status === 'success') {
-            ws.send(JSON.stringify({ type: "success", message: result.message, data: result.data }));
+            ws.send(JSON.stringify({ type: "success", message: result.message }));
         }
         else if (result.status === 'failure') {
             ws.send(JSON.stringify({ type: "failure", message: result.message }));

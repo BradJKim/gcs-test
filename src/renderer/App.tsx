@@ -5,15 +5,30 @@ import { Navbar, Cubesat} from "./components";
 import './App.css';
 
 function Main() {
+
+	/* VARIABLES*/
+
 	const ws = useContext(WebsocketContext);
 
 	const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
 	const [cubesats, setCubesats] = useState<any[]>([]);
-	const [waiting, setWaiting] = useState<boolean>(false); 
+	const [waiting, setWaiting] = useState<boolean>(false);
 
 	const [count, setCount] = useState(0);
-	const [update, setUpdate] = useState(0);
+
+	/* FUNCTIONS */
+
+	const sendWSRequest = (message: string, params?: {}) => {
+		setWaiting(true);
+		if (params) {
+			ws.send(JSON.stringify({type: 'request', message: message, params: params}));
+		} else {
+			ws.send(JSON.stringify({type: 'request', message: message}));
+		}
+	}
+
+	/* USE EFFECTS */
 
 	useEffect(() => {
 		const interval = setInterval(() => {
@@ -22,52 +37,50 @@ function Main() {
 
 		if (ws.ready) {
 			//ws.send(JSON.stringify({type: 'ping', message: 'Hello, server!'}));
-			setWaiting(true);
-			ws.send(JSON.stringify({type: 'request', message: 'getAll'}));
+			sendWSRequest('getAll');
 		}
 
 		return () => clearInterval(interval);
 	}, [ws.ready]);
 
 	useEffect(() => {
-		console.log('hello')
-
 		if (waiting && ws.value) {
 			const response = JSON.parse(ws.value!);
-
-			console.log("waiting")
 			
 			if(response.message === "All Cubesats returned successfully") {
 				setCubesats(response.data);
-
 				setWaiting(false);
+			} else {
+				sendWSRequest('getAll');
 			}
 			
 		}
 	}, [waiting && ws.value]);
 
-	const getCubesatsButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
-		setWaiting(true);
-		ws.send(JSON.stringify({type: 'request', message: 'getAll'}));
+	/* EVENT HANDLERS */
 
+	const getCubesatsButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
+		sendWSRequest('getAll');
 	}
 
 	const addButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
-		setWaiting(true);
-		ws.send(JSON.stringify({type: 'request', message: 'add', params: {id: count}}));
 		setCount(count + 1);
+		sendWSRequest('add', {
+			id: count,
+			name: 'Drone ' + count,
+		});
 	}
 
 	const updateButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
 		const parameters = {
 			id: 0,
 			active: true,
-			x: update
+			x: Math.floor(Math.random() * (100 - 1 + 1)) + 1
 		}
-		ws.send(JSON.stringify({type: 'request', message: 'update', params: parameters}));
-
-		setUpdate(Math.floor(Math.random() * (100 - 1 + 1)) + 1);
+		sendWSRequest('update', parameters);
 	}
+
+	/* CONTENT */
 
 	return (
 		<div>

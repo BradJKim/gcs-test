@@ -3,13 +3,11 @@ import { createContext, ReactNode, useEffect, useRef, useState } from "react";
 interface ContextType {
     ready: boolean;
     value: string | null;
-    tick: number;
     send: (name: string) => void;
 }
 
 export const WebsocketContext = createContext<ContextType>({ready: false,
                                                             value: null,
-                                                            tick: 0,
                                                             send: () => {}});
 
 const URL = 'ws://127.0.0.1:8080'
@@ -46,11 +44,8 @@ export const WebsocketProvider = ({children} : Props ) => {
     const ret = {
         ready: isReady,
         value: val,
-        tick: tick,
         send: send
     };
-
-    console.log(ret)
     
     return (
         <WebsocketContext.Provider value={ret}>
