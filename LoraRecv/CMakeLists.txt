@@ -23,45 +23,33 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico CACHE STRING "Board type")
+set(PICO_BOARD pico_w CACHE STRING "Board type")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(acktestrecieve1 C CXX ASM)
+project(picotelemetry_test C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(acktestrecieve1 acktestrecieve1.c )
+add_executable(picotelemetry_test picotelemetry_test.c )
 
-pico_set_program_name(acktestrecieve1 "acktestrecieve1")
-pico_set_program_version(acktestrecieve1 "0.1")
+pico_set_program_name(picotelemetry_test "picotelemetry_test")
+pico_set_program_version(picotelemetry_test "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(acktestrecieve1 0)
-pico_enable_stdio_usb(acktestrecieve1 1)
+pico_enable_stdio_uart(picotelemetry_test 0)
+pico_enable_stdio_usb(picotelemetry_test 1)
 
 # Add the standard library to the build
-target_link_libraries(acktestrecieve1
-        pico_stdlib)
+target_link_libraries(picotelemetry_test pico_stdlib hardware_spi hardware_gpio hardware_sync pico_sync pico_multicore)
 
 # Add the standard include files to the build
-target_include_directories(acktestrecieve1 PRIVATE
+target_include_directories(picotelemetry_test PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
 )
 
-# Add any user requested libraries
-target_link_libraries(acktestrecieve1 
-    pico_stdlib
-    hardware_spi
-    hardware_gpio
-    hardware_sync
-    pico_sync  # ✅ Added for mutex support
-    pico_multicore # ✅ Added for multicore support
-    )
-
-pico_add_extra_outputs(acktestrecieve1)
-
+pico_add_extra_outputs(picotelemetry_test)
