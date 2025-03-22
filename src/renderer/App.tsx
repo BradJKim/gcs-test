@@ -10,7 +10,7 @@ function Main() {
 
 	const ws = useContext(WebsocketContext);
 
-	const [, forceUpdate] = useReducer((x) => x + 1, 0);
+	// const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
 	const [cubesats, setCubesats] = useState<any[]>([]);
 	const [waiting, setWaiting] = useState<boolean>(false);
@@ -30,7 +30,7 @@ function Main() {
 
 	/* USE EFFECTS */
 
-	useEffect(() => {
+	/* useEffect(() => {
 		const interval = setInterval(() => {
 			forceUpdate();
 		}, 2000)
@@ -41,21 +41,21 @@ function Main() {
 		}
 
 		return () => clearInterval(interval);
-	}, [ws.ready]);
+	}, [ws.ready]); */
 
 	useEffect(() => {
 		if (waiting && ws.value) {
+			setWaiting(false);
 			const response = JSON.parse(ws.value!);
-			
+
 			if(response.message === "All Cubesats returned successfully") {
 				setCubesats(response.data);
-				setWaiting(false);
 			} else {
 				sendWSRequest('getAll');
 			}
 			
 		}
-	}, [waiting && ws.value]);
+	}, [ws.value]);
 
 	/* EVENT HANDLERS */
 
@@ -80,6 +80,18 @@ function Main() {
 		sendWSRequest('update', parameters);
 	}
 
+	const activeButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
+		// Deactive all cubesats and re-ping
+		// NOTE: Is not able to add new, undetected cubesats
+		cubesats.map((cubesat) => {
+			const parameters = { 'id': cubesat.id, 'active': false };
+			sendWSRequest('update', parameters);
+
+			const message = `{ 'message': 'ping', 'params': { 'id': ${cubesat.id} } }`;
+			sendWSRequest('send', message);
+		})
+	}
+
 	/* CONTENT */
 
 	return (
@@ -94,6 +106,9 @@ function Main() {
 				</button>
 				<button onClick={updateButtonHandler} className="updateCubesat">
 					Update Cubesat
+				</button>
+				<button onClick={activeButtonHandler} className="findActive">
+					Find Active
 				</button>
 			</div>
 			<div className="cubesats">
