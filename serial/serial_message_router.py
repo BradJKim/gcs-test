@@ -2,6 +2,7 @@
 # consumer -> write to port.
 # port -> write to publisher.
 
+import random
 from classes.rabbitmq import RabbitMQ
 from utils.port_finder import list_connected_ports
 from utils.message_packer import *
@@ -27,21 +28,25 @@ start_thread = False
     
 try:
     """ Serial Port Initialization """
-    print("Syncing Ports")
-
-    ports = list_connected_ports()
-
-    if (S1_PORT_NAME not in ports ): # or s2_port_name not in ports
-        print("Listed Serial port not found, unable to create ")
-        print("Run port_finder.py to manually search for open Serial Ports")
-        sys.exit()
-
-    s1 = serial.Serial(S1_PORT_NAME, baudrate=BAUD_RATE, timeout=1)
-    # s2 = serial.Serial(s2_port_name)
     
-    ports_created = True
-    time.sleep(1)  # Allow Pico to initialize
-    s1.reset_input_buffer()
+    serial_in = False
+    
+    if(serial_in):
+        print("Syncing Ports")
+
+        ports = list_connected_ports()
+
+        if (S1_PORT_NAME not in ports ): # or s2_port_name not in ports
+            print("Listed Serial port not found, unable to create ")
+            print("Run port_finder.py to manually search for open Serial Ports")
+            sys.exit()
+
+        s1 = serial.Serial(S1_PORT_NAME, baudrate=BAUD_RATE, timeout=1)
+        # s2 = serial.Serial(s2_port_name)
+        
+        ports_created = True
+        time.sleep(1)  # Allow Pico to initialize
+        s1.reset_input_buffer()
     
     
 
@@ -61,17 +66,37 @@ try:
     
     """ Callback Functions """
     
+    # simulate raspi call
+    test = {
+        0: False,
+        1: False,
+        2: False,
+        3: False,
+        4: False,
+    }
+    
     def consumer_callback(ch, method, props, body): # send to serial ports
-        print(f"Received from Server: {body}")
-        
         # TODO: Create Logic for serve gcs request handling
         # TODO: create serial message payload
-        # port.write(message.encode())
+        decode_body = body.decode("utf-8").replace('\\', '')[1:-1]
+        
+        print("Consumer callback called: " + decode_body)
+        
+        message = json.loads(decode_body)
+        print(message)
+        
+        if(message['message'] == 'ping'):
+            test[message['params']['id']] = True
+        
+        #message = pack_message(body)
+        #port.write(message.encode())
 
     def serial_callback(body): # send to RabbitMQ
-        # TODO: Create Logic for serial response handling
-        # TODO: create rbmq message Payload
-        send_message_to_rbmq(sending_message=body)
+        if (body['status'] == 'failure'):
+            print("Invalid serial callback body")
+        else:
+            json_data = json.dumps(body)
+            send_message_to_rbmq(sending_message=str(json_data))
 
 
 
@@ -89,15 +114,16 @@ try:
     print("Activating Serial Listeners:")
 
     while True:
-        packet = s1.readline().decode().strip()
-        
+        """ packet = s1.readline().decode().strip()
         if not packet: continue
+        
         print("Received from Pico:", packet)
         
         if len(packet) == 128:
-            telemetry = packet_telemetry(packet)
+            telemetry = unpack_telemetry(packet)
         else:
-            telemetry = { 'status': 'failure' }
+            # telemetry = unpack_ping(packet)
+            telemetry = { 'status': 'failure' } """
             
 
         # if received serial message requires multiple serial messages:
@@ -106,10 +132,12 @@ try:
         
         
         # test continuous sending from python script
-        data = {'type': 'ping'}
-        json_data = json.dumps(data)
-        serial_callback(str(json_data))
-                
+        for key in test.keys():
+            if test[key] == True:
+                telemetry = { 'status': 'success', 'type': 'response', 'message': 'update', 'params': { 'id': key, 'active': True, 'x': random.randrange(1,100) } }
+                serial_callback(telemetry)
+                test[key] = False
+
         time.sleep(2)
 
 finally:

@@ -1,6 +1,6 @@
 import struct
 
-def packet_telemetry(packet):
+def unpack_telemetry(packet):
     # Unpack the first 44 bytes where our data is located.
     # The structure is:
     #   uint32_t x (4 bytes)
@@ -39,3 +39,12 @@ def packet_telemetry(packet):
             'battery_level': battery_level
         }
     }
+
+def unpack_ping(packet):
+    # from packet, returns telemetry = { 'status': 'success', 'type': 'update', 'params': { 'id': 0, 'active': True } } data type
+    
+    return ''
+
+def pack_message(packet):
+
+    return ''
