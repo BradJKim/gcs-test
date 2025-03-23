@@ -17,12 +17,12 @@ exports.getAllCubesats = getAllCubesats;
 exports.updateCubesat = updateCubesat;
 exports.deleteCubesat = deleteCubesat;
 const cubesat_1 = __importDefault(require("../models/cubesat"));
-function createCubesat(id) {
+function createCubesat(drone_id, name) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield cubesat_1.default.create({
-                id: id,
-                name: 'drone'
+                drone_id: drone_id,
+                name: name
             });
             return { status: 'success', message: 'Cubesat created successfully' };
         }

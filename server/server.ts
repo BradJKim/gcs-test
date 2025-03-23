@@ -3,7 +3,8 @@ import wsController from './controllers/controller';
 import db from './config/dbConfig';
 import amqp, { Channel, Message } from 'amqplib'
 
-const clients: Map<string, WebSocket> = new Map();
+// const clients: Map<string, WebSocket> = new Map();
+let websocket: WebSocket | null = null;
 
 const port = 8080
 
@@ -44,12 +45,16 @@ const wss = new WebSocket.Server({ port: port});
 
             // Client Request Type Handling
             ws.on('message', (message) => {
-                console.log('received: %s', message);
+                console.log('Received Client: %s', message);
 
                 const parsedMessage = JSON.parse(message.toString());
 
-                if (parsedMessage.clientId) {
+                /* if (parsedMessage.clientId) {
                     clients.set(parsedMessage.clientId, ws);
+                } */
+
+                if (!websocket) {
+                    websocket = ws;
                 }
 
                 const controllerParams: [Channel, string, WebSocket, string, string] = [
@@ -59,7 +64,7 @@ const wss = new WebSocket.Server({ port: port});
                     parsedMessage.message,
                     JSON.stringify(parsedMessage.params)
                 ]
-        
+
                 switch(parsedMessage.type) {
                     case "request":
                         wsController(...controllerParams);
@@ -76,11 +81,6 @@ const wss = new WebSocket.Server({ port: port});
             });
 
             ws.on('close', () => {
-                clients.forEach((value, key) => {
-                    if (value === ws) {
-                        clients.delete(key);
-                    }
-                });
                 console.log("WebSocket Disconnected");
             });
 
@@ -91,14 +91,14 @@ const wss = new WebSocket.Server({ port: port});
         channel.consume(consumer_queue, (msg: Message | null) => {
             if (msg !== null) {
                 const message = msg.content.toString()
-                console.log('Received:', message);
+                console.log('Received Rabbitmq:', message);
                 channel.ack(msg);
 
                 try {
                     const parsedMessage = JSON.parse(message);
 
-                    if (parsedMessage.clientId && clients.has(parsedMessage.clientId)) {
-                        const ws = clients.get(parsedMessage.clientId);
+                    if(websocket) {
+                        const ws = websocket
                         if (ws && ws.readyState === WebSocket.OPEN) {
 
                             const controllerParams: [Channel, string, WebSocket, string, string] = [
@@ -111,11 +111,13 @@ const wss = new WebSocket.Server({ port: port});
         
                             switch(parsedMessage.type) {
                                 case "response":
+                                    console.log("sending server")
                                     wsController(...controllerParams);
                                     break;
                                     
                                 case "ping":
-                                    channel.sendToQueue(publisher_queue, Buffer.from("Ping received by server"));
+                                    // channel.sendToQueue(publisher_queue, Buffer.from("Ping received by server"));
+                                    wsController(...controllerParams);
                                     break;
         
                                 default:

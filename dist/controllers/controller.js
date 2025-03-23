@@ -29,8 +29,9 @@ function wsController(channel, queue, ws, message, params) {
      */
     const sendMessage = () => {
         try {
-            const MessageJSON = JSON.parse(params);
-            channel.sendToQueue(queue, Buffer.from(MessageJSON['message']));
+            console.log(params);
+            // const MessageJSON: Message = JSON.parse(params); // MessageJSON['message']
+            channel.sendToQueue(queue, Buffer.from(params));
             ws.send(JSON.stringify({ type: "success", message: "Message sent" }));
         }
         catch (err) {
@@ -55,7 +56,7 @@ function wsController(channel, queue, ws, message, params) {
      */
     const addCubesat = () => __awaiter(this, void 0, void 0, function* () {
         const cubesatJson = JSON.parse(params);
-        const response = yield (0, db_1.createCubesat)(cubesatJson['id']);
+        const response = yield (0, db_1.createCubesat)(cubesatJson['drone_id'], cubesatJson['name']);
         const result = yield response;
         if (result.status === 'success') {
             ws.send(JSON.stringify({ type: "success", message: result.message }));

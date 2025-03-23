@@ -16,7 +16,8 @@ const ws_1 = __importDefault(require("ws"));
 const controller_1 = __importDefault(require("./controllers/controller"));
 const dbConfig_1 = __importDefault(require("./config/dbConfig"));
 const amqplib_1 = __importDefault(require("amqplib"));
-const clients = new Map();
+// const clients: Map<string, WebSocket> = new Map();
+let websocket = null;
 const port = 8080;
 const username = process.env.RABBITMQ_USER;
 const password = process.env.RABBITMQ_PASS;
@@ -49,10 +50,13 @@ const wss = new ws_1.default.Server({ port: port });
             wss.on('connection', (ws) => {
                 // Client Request Type Handling
                 ws.on('message', (message) => {
-                    console.log('received: %s', message);
+                    console.log('Received Client: %s', message);
                     const parsedMessage = JSON.parse(message.toString());
-                    if (parsedMessage.clientId) {
+                    /* if (parsedMessage.clientId) {
                         clients.set(parsedMessage.clientId, ws);
+                    } */
+                    if (!websocket) {
+                        websocket = ws;
                     }
                     const controllerParams = [
                         channel,
@@ -74,11 +78,6 @@ const wss = new ws_1.default.Server({ port: port });
                     }
                 });
                 ws.on('close', () => {
-                    clients.forEach((value, key) => {
-                        if (value === ws) {
-                            clients.delete(key);
-                        }
-                    });
                     console.log("WebSocket Disconnected");
                 });
             });
@@ -87,12 +86,12 @@ const wss = new ws_1.default.Server({ port: port });
             channel.consume(consumer_queue, (msg) => {
                 if (msg !== null) {
                     const message = msg.content.toString();
-                    console.log('Received:', message);
+                    console.log('Received Rabbitmq:', message);
                     channel.ack(msg);
                     try {
                         const parsedMessage = JSON.parse(message);
-                        if (parsedMessage.clientId && clients.has(parsedMessage.clientId)) {
-                            const ws = clients.get(parsedMessage.clientId);
+                        if (websocket) {
+                            const ws = websocket;
                             if (ws && ws.readyState === ws_1.default.OPEN) {
                                 const controllerParams = [
                                     channel,
@@ -103,10 +102,12 @@ const wss = new ws_1.default.Server({ port: port });
                                 ];
                                 switch (parsedMessage.type) {
                                     case "response":
+                                        console.log("sending server");
                                         (0, controller_1.default)(...controllerParams);
                                         break;
                                     case "ping":
-                                        channel.sendToQueue(publisher_queue, Buffer.from("Ping received by server"));
+                                        // channel.sendToQueue(publisher_queue, Buffer.from("Ping received by server"));
+                                        (0, controller_1.default)(...controllerParams);
                                         break;
                                     default:
                                         channel.sendToQueue(publisher_queue, Buffer.from("Invalid Message Type, rejecting message"));

@@ -1,7 +1,7 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
-import { useState, useEffect, useContext, useReducer } from 'react';
+import { useState, useEffect, useContext, useReducer, useRef } from 'react';
 import { WebsocketContext, WebsocketProvider } from './WebsocketProvider';
-import { Navbar, Cubesat} from "./components";
+import { Cubesat} from "./components";
 import './App.css';
 
 function Main() {
@@ -10,13 +10,15 @@ function Main() {
 
 	const ws = useContext(WebsocketContext);
 
-	// const [, forceUpdate] = useReducer((x) => x + 1, 0);
+	const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
 	const [cubesats, setCubesats] = useState<any[]>([]);
 	const [waiting, setWaiting] = useState<boolean>(false);
+	const [popupVisible, setPopupVisible] = useState<boolean>(false)
 
-	const [count, setCount] = useState(0);
-
+	const nameRef = useRef<HTMLInputElement>(null);
+	const idRef = useRef<HTMLInputElement>(null);
+	
 	/* FUNCTIONS */
 
 	const sendWSRequest = (message: string, params?: {}) => {
@@ -30,18 +32,20 @@ function Main() {
 
 	/* USE EFFECTS */
 
-	/* useEffect(() => {
+	useEffect(() => {
 		const interval = setInterval(() => {
-			forceUpdate();
+			if(!waiting) sendWSRequest('getAll');
 		}, 2000)
 
 		if (ws.ready) {
 			//ws.send(JSON.stringify({type: 'ping', message: 'Hello, server!'}));
 			sendWSRequest('getAll');
+
+			// autoscan
 		}
 
 		return () => clearInterval(interval);
-	}, [ws.ready]); */
+	}, [ws.ready]);
 
 	useEffect(() => {
 		if (waiting && ws.value) {
@@ -50,6 +54,8 @@ function Main() {
 
 			if(response.message === "All Cubesats returned successfully") {
 				setCubesats(response.data);
+			} else if (response.type === "failure") {
+				console.log("Request Failure: " + response.message)
 			} else {
 				sendWSRequest('getAll');
 			}
@@ -59,62 +65,89 @@ function Main() {
 
 	/* EVENT HANDLERS */
 
-	const getCubesatsButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
-		sendWSRequest('getAll');
-	}
-
+	// TODO: create empty drone with ask id input and name
 	const addButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
-		setCount(count + 1);
+		setPopupVisible(!popupVisible)
+
+		/* setCount(count + 1);
 		sendWSRequest('add', {
 			id: count,
 			name: 'Drone ' + count,
-		});
+		}); */
 	}
 
-	const updateButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
+	/* const updateButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
 		const parameters = {
 			id: 0,
 			active: true,
 			x: Math.floor(Math.random() * (100 - 1 + 1)) + 1
 		}
 		sendWSRequest('update', parameters);
-	}
+	} */
 
 	const activeButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
 		// Deactive all cubesats and re-ping
 		// NOTE: Is not able to add new, undetected cubesats
 		cubesats.map((cubesat) => {
-			const parameters = { 'id': cubesat.id, 'active': false };
+			const parameters = { id: cubesat.id, active: false };
 			sendWSRequest('update', parameters);
 
-			const message = `{ 'message': 'ping', 'params': { 'id': ${cubesat.id} } }`;
+			const message = JSON.stringify({ message: 'ping', params: { 'id': cubesat.id }});
 			sendWSRequest('send', message);
 		})
+	}
+
+	const handleSubmit = (event: React.FormEvent) => {
+		event.preventDefault();
+
+		const id = idRef.current?.value;
+		const name = nameRef.current?.value;
+
+		sendWSRequest('add', {
+			drone_id: id,
+			name: name,
+		});
+
+		if (nameRef.current) nameRef.current.value = "";
+  		if (idRef.current) idRef.current.value = "";
+
+		setPopupVisible(!popupVisible)
 	}
 
 	/* CONTENT */
 
 	return (
 		<div>
-			<Navbar />
-			<div className="buttons">
-				<button onClick={getCubesatsButtonHandler} className="getCubesats">
-					Get Cubesats
-				</button>
-				<button onClick={addButtonHandler} className="addCubesat">
-					Add Cubesat
-				</button>
-				<button onClick={updateButtonHandler} className="updateCubesat">
-					Update Cubesat
-				</button>
-				<button onClick={activeButtonHandler} className="findActive">
-					Find Active
-				</button>
+			<div className='navbar'>
+				<div className="buttons">
+					<button onClick={addButtonHandler} className="addCubesat">
+						Add Cubesat
+					</button>
+					{/* <button onClick={updateButtonHandler} className="updateCubesat">
+						Update Cubesat
+					</button> */}
+					<button onClick={activeButtonHandler} className="findActive">
+						Find Active
+					</button>
+				</div>
 			</div>
 			<div className="cubesats">
 				{cubesats.map((cubesat, index) => {
 					return (<Cubesat key={index} {...cubesat}/>);
 				})}
+			</div>
+			<div className="addCubesatPopup" style={{ display: popupVisible ? "block": "none" }}>
+				<form onSubmit={handleSubmit}>
+					<div>
+						<label>Id:</label>
+						<input type="text" ref={idRef} required/>
+					</div>
+					<div>
+						<label>Name:</label>
+						<input type="text" ref={nameRef} required/>
+					</div>
+					<button type="submit">Submit</button>
+				</form>
 			</div>
 		</div>
 	);

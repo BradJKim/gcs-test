@@ -6,6 +6,10 @@ const Cubesat = db.define("cubesat", {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
+        autoIncrement: true,
+    },
+    drone_id: {
+        type: DataTypes.INTEGER,
         allowNull: false,
     },
     name: {

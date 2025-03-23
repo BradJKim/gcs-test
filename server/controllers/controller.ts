@@ -11,9 +11,10 @@ export default function wsController(channel: Channel, queue: string, ws: WebSoc
      */
     const sendMessage = () => {
         try {
-            const MessageJSON: Message = JSON.parse(params);
+            console.log(params)
+            // const MessageJSON: Message = JSON.parse(params); // MessageJSON['message']
 
-            channel.sendToQueue(queue, Buffer.from(MessageJSON['message']));
+            channel.sendToQueue(queue, Buffer.from(params));
             ws.send(JSON.stringify({ type: "success", message: "Message sent" }));
         } catch (err) {
             ws.send(JSON.stringify({ type: "failure", message: "Unable to send message" }));
@@ -40,7 +41,7 @@ export default function wsController(channel: Channel, queue: string, ws: WebSoc
     const addCubesat = async () => {
         const cubesatJson: Cubesat = JSON.parse(params);
 
-        const response = await createCubesat(cubesatJson['id']);
+        const response = await createCubesat(cubesatJson['drone_id'], cubesatJson['name']);
         const result = await response;
 
         if(result.status === 'success') {

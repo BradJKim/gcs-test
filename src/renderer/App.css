@@ -33,3 +33,12 @@ a:hover {
   text-decoration: none;
 }
 
+.addCubesatPopup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: lightblue;
+  padding: 20px;
+  text-align: center;
+}

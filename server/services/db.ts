@@ -1,10 +1,10 @@
 import Cubesat from "../models/cubesat";
 
-export async function createCubesat(id: number) {
+export async function createCubesat(drone_id: number, name: string) {
     try {
         await Cubesat.create({
-            id: id,
-            name: 'drone'
+            drone_id: drone_id,
+            name: name
         });
 
         return {status: 'success', message: 'Cubesat created successfully'};

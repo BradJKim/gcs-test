@@ -16,12 +16,18 @@ interface Cubesat {
 }
     
 const Cubesat: React.FC<Cubesat> = (props) => {
+
+    // edit name or id feature with input elements
+    // delete button with confirm
+    // make smaller
+    // get rid of created and make time since last updated
+
     return (
-        <div>
-            <h1>Cubesat</h1>
+        <div id={`${props.id}`} className="cubesat">
+            <h1 className="title">{props.name}</h1>
             {Object.entries(props).map(([key, value]) => (
-                <p key={key}>
-                    {key}:{String(value)}
+                <p className="" key={key}>
+                    {key}: {String(value)}
                 </p>
             ))}
         </div>

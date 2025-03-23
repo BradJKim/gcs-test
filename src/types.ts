@@ -1,5 +1,6 @@
 interface Cubesat {
     id: number;
+    drone_id: number;
     name: string;
     active: boolean;
     x: number;

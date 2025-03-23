@@ -9,6 +9,10 @@ const Cubesat = dbConfig_1.default.define("cubesat", {
     id: {
         type: sequelize_1.DataTypes.INTEGER,
         primaryKey: true,
+        autoIncrement: true,
+    },
+    drone_id: {
+        type: sequelize_1.DataTypes.INTEGER,
         allowNull: false,
     },
     name: {
