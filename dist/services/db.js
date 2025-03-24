@@ -42,13 +42,13 @@ function getAllCubesats() {
         }
     });
 }
-function updateCubesat(id, fields) {
+function updateCubesat(drone_id, fields) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             // Perform the update with dynamic fields
             const result = yield cubesat_1.default.update(fields, {
                 where: {
-                    id: id,
+                    drone_id: drone_id,
                 },
             });
             return { status: 'success', message: 'Cubesat updated successfully' };
@@ -58,11 +58,11 @@ function updateCubesat(id, fields) {
         }
     });
 }
-function deleteCubesat() {
+function deleteCubesat(drone_id) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield cubesat_1.default.destroy({
-                where: { name: 'drone' }
+                where: { drone_id: drone_id }
             });
             return { status: 'success', message: 'Cubesat destroyed successfully' };
         }

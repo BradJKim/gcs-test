@@ -12,7 +12,7 @@ function Main() {
 
 	const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
-	const [cubesats, setCubesats] = useState<any[]>([]);
+	const [cubesats, setCubesats] = useState<Cubesat[]>([]);
 	const [waiting, setWaiting] = useState<boolean>(false);
 	const [popupVisible, setPopupVisible] = useState<boolean>(false)
 
@@ -65,15 +65,8 @@ function Main() {
 
 	/* EVENT HANDLERS */
 
-	// TODO: create empty drone with ask id input and name
 	const addButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
 		setPopupVisible(!popupVisible)
-
-		/* setCount(count + 1);
-		sendWSRequest('add', {
-			id: count,
-			name: 'Drone ' + count,
-		}); */
 	}
 
 	/* const updateButtonHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -89,10 +82,10 @@ function Main() {
 		// Deactive all cubesats and re-ping
 		// NOTE: Is not able to add new, undetected cubesats
 		cubesats.map((cubesat) => {
-			const parameters = { id: cubesat.id, active: false };
+			const parameters = { drone_id: cubesat.drone_id, active: false };
 			sendWSRequest('update', parameters);
 
-			const message = JSON.stringify({ message: 'ping', params: { 'id': cubesat.id }});
+			const message = JSON.stringify({ message: 'ping', params: { 'id': cubesat.drone_id }});
 			sendWSRequest('send', message);
 		})
 	}
@@ -106,6 +99,7 @@ function Main() {
 		sendWSRequest('add', {
 			drone_id: id,
 			name: name,
+			active: false
 		});
 
 		if (nameRef.current) nameRef.current.value = "";
@@ -113,6 +107,10 @@ function Main() {
 
 		setPopupVisible(!popupVisible)
 	}
+
+	const removeCubesat = (drone_id: number) => {
+		sendWSRequest('remove', { drone_id: drone_id })
+	};
 
 	/* CONTENT */
 
@@ -133,10 +131,11 @@ function Main() {
 			</div>
 			<div className="cubesats">
 				{cubesats.map((cubesat, index) => {
-					return (<Cubesat key={index} {...cubesat}/>);
+					return (<Cubesat key={cubesat.drone_id} onDelete={removeCubesat} {...cubesat}/>);
 				})}
 			</div>
 			<div className="addCubesatPopup" style={{ display: popupVisible ? "block": "none" }}>
+				<button onClick={addButtonHandler}>Close</button>
 				<form onSubmit={handleSubmit}>
 					<div>
 						<label>Id:</label>

@@ -70,8 +70,22 @@ function wsController(channel, queue, ws, message, params) {
      */
     const editCubesat = () => __awaiter(this, void 0, void 0, function* () {
         const cubesatJson = JSON.parse(params);
-        const { id } = cubesatJson, parameters = __rest(cubesatJson, ["id"]);
-        const response = yield (0, db_1.updateCubesat)(id, parameters);
+        const { id, drone_id } = cubesatJson, parameters = __rest(cubesatJson, ["id", "drone_id"]);
+        const response = yield (0, db_1.updateCubesat)(drone_id, parameters);
+        const result = yield response;
+        if (result.status === 'success') {
+            ws.send(JSON.stringify({ type: "success", message: result.message }));
+        }
+        else if (result.status === 'failure') {
+            ws.send(JSON.stringify({ type: "failure", message: result.message }));
+        }
+    });
+    /**
+    * DB request remove cubesat
+    */
+    const removeCubesat = () => __awaiter(this, void 0, void 0, function* () {
+        const cubesatJson = JSON.parse(params);
+        const response = yield (0, db_1.deleteCubesat)(cubesatJson['drone_id']);
         const result = yield response;
         if (result.status === 'success') {
             ws.send(JSON.stringify({ type: "success", message: result.message }));
@@ -93,11 +107,11 @@ function wsController(channel, queue, ws, message, params) {
     else if (message === 'getAll') {
         getCubesats();
     }
-    /* else if (message === 'remove') {
-        removeCubesat()
+    else if (message === 'remove') {
+        removeCubesat();
         ws.send(JSON.stringify({ type: "success", message: "Removed Cubesat" }));
-    } */
+    }
     else { // message unknown
-        ws.send(JSON.stringify({ type: "error", message: "Unknown request" }));
+        ws.send(JSON.stringify({ type: "failure", message: "Unknown request" }));
     }
 }

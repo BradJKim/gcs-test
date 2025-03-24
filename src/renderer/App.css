@@ -2,6 +2,12 @@
  * @NOTE: Prepend a `~` to css file paths that are in your node_modules
  *        See https://github.com/webpack-contrib/sass-loader#imports
  */
+
+ * {
+  margin: 0;
+  padding: 0;
+}
+
 body {
   color: black;
   height: 100vh;
@@ -15,22 +21,6 @@ button {
   appearance: none;
   font-size: 1.3rem;
   cursor: pointer;
-}
-
-li {
-  list-style: none;
-}
-
-a {
-  text-decoration: none;
-  height: fit-content;
-  width: fit-content;
-  margin: 10px;
-}
-
-a:hover {
-  opacity: 1;
-  text-decoration: none;
 }
 
 .addCubesatPopup {

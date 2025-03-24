@@ -23,12 +23,12 @@ export async function getAllCubesats() {
     }
 }
 
-export async function updateCubesat(id: number, fields: object) {
+export async function updateCubesat(drone_id: number, fields: object) {
     try {
       // Perform the update with dynamic fields
       const result = await Cubesat.update(fields, {
         where: {
-          id: id,
+            drone_id: drone_id,
         },
       });
 
@@ -38,10 +38,10 @@ export async function updateCubesat(id: number, fields: object) {
     }
 }
 
-export async function deleteCubesat() {
+export async function deleteCubesat(drone_id: number) {
     try {
         await Cubesat.destroy({
-            where: {name: 'drone'}
+            where: {drone_id: drone_id}
         });
 
         return {status: 'success', message: 'Cubesat destroyed successfully'};

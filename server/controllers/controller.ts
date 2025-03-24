@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { createCubesat, updateCubesat, getAllCubesats} from "../services/db";
+import { createCubesat, updateCubesat, getAllCubesats, deleteCubesat} from "../services/db";
 import { Channel } from "amqplib";
 
 export default function wsController(channel: Channel, queue: string, ws: WebSocket, message: string, params: string): void {
@@ -57,9 +57,25 @@ export default function wsController(channel: Channel, queue: string, ws: WebSoc
     const editCubesat = async () => {
         const cubesatJson: Cubesat = JSON.parse(params);
 
-        const { id, ...parameters } = cubesatJson;
+        const { id, drone_id, ...parameters } = cubesatJson;
 
-        const response = await updateCubesat(id, parameters);
+        const response = await updateCubesat(drone_id, parameters);
+        const result = await response;
+
+        if(result.status === 'success') {
+            ws.send(JSON.stringify({ type: "success", message: result.message }));
+        } else if (result.status === 'failure') {
+            ws.send(JSON.stringify({ type: "failure", message: result.message }));
+        }
+    }
+
+    /**
+    * DB request remove cubesat
+    */
+    const removeCubesat = async () => {
+        const cubesatJson: Cubesat = JSON.parse(params);
+
+        const response = await deleteCubesat(cubesatJson['drone_id']);
         const result = await response;
 
         if(result.status === 'success') {
@@ -83,12 +99,12 @@ export default function wsController(channel: Channel, queue: string, ws: WebSoc
     else if(message === 'getAll') {
         getCubesats();
     }
-    /* else if (message === 'remove') {
-        removeCubesat()
+    else if (message === 'remove') {
+        removeCubesat();
         ws.send(JSON.stringify({ type: "success", message: "Removed Cubesat" }));
-    } */
+    }
     else { // message unknown
-        ws.send(JSON.stringify({ type: "error", message: "Unknown request" }));
+        ws.send(JSON.stringify({ type: "failure", message: "Unknown request" }));
     }
     
 }
